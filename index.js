@@ -1,8 +1,5 @@
 'use strict';
 
-// Logger for lib logging.
-var localLogger;
-
 // Supported logging levels, in ascending order.
 var levels = [
     'trace',
@@ -41,56 +38,45 @@ function defaultFormatter(args) {
     return args.join(' ');
 }
 
-// The current configuration.
-var configuration = {
-    // The list of loggers:
-    // {
-    //  name: regex to match the used logger name
-    //  level: string level threshold
-    //  target: object implementation of all logging levels
-    // }
-    loggers: defaultLoggers(),
-    // The formatter is a function used to merge multi string input.
-    formatter: defaultFormatter,
-    // Standard output redirection.
-    // Either boolean or object with target logger name.
-    redirectStd: false,
-    // The main text property to add.
-    msgProperty: 'msg',
-};
-
-// Configure the logging framework globally,
-// can be done partially multiple times.
-function configure(conf) {
-    if ('loggers' in conf) configuration.loggers = conf.loggers;
-    if ('formatter' in conf) configuration.formatter = conf.formatter;
-    if ('redirectStd' in conf) configuration.redirectStd = conf.redirectStd;
-    if ('msgProperty' in conf) configuration.msgProperty = conf.msgProperty;
-    confDirty = true;
+// The current configuration, on GLOBAL so it is initialized on first require() only,
+// even when importing external modules.
+if (!GLOBAL.logFacade) {
+    GLOBAL.logFacade = {
+        // The list of loggers:
+        // {
+        //  name: regex to match the used logger name
+        //  level: string level threshold
+        //  target: object implementation of all logging levels
+        // }
+        loggers: defaultLoggers(),
+        // The formatter is a function used to merge multi string input.
+        formatter: defaultFormatter,
+        // The main text property to add.
+        msgProperty: 'msg',
+        // Standard output redirection.
+        redirectStd: false,
+    };
 }
 
-// Has the configuration been changed since last applyConfiguration().
-var confDirty = true;
-
-// Configuration is only applied when requesting a logger,
-// so configure() can be called multiple times.
-function applyConfiguration() {
-    if (confDirty) {
-        confDirty = false;
-        // Standard output redirection.
-        if (configuration.redirectStd === true || typeof configuration.redirectStd === 'object') {
+function configure(conf) {
+    if ('loggers' in conf) GLOBAL.logFacade.loggers = conf.loggers;
+    if ('formatter' in conf) GLOBAL.logFacade.formatter = conf.formatter;
+    if ('msgProperty' in conf) GLOBAL.logFacade.msgProperty = conf.msgProperty;
+    GLOBAL.logFacade._logger = getLogger('log-facade');
+    if ('redirectStd' in conf && conf.redirectStd !== GLOBAL.logFacade.redirectStd) {
+        if (conf.redirectStd === true || typeof conf.redirectStd === 'object') {
             var loggerName;
-            if (typeof configuration.redirectStd === 'object') {
-                loggerName = configuration.redirectStd.name;
+            if (typeof conf.redirectStd === 'object') {
+                loggerName = conf.redirectStd.name;
             }
             if (!loggerName) {
                 loggerName = 'console';
             }
             standard.redirect(loggerName);
-        } else if (typeof configuration.redirectStd === false) {
+        } else if (typeof conf.redirectStd === false) {
             standard.restore();
         }
-        localLogger = getLogger('log-facade');
+        GLOBAL.logFacade.redirectStd = conf.redirectStd;
     }
 }
 
@@ -129,8 +115,8 @@ var standard = (function () {
 
 // Look for a logger by name in the list.
 function findLogger(name) {
-    for (var i = 0; i < configuration.loggers.length; i++) {
-        var logger = configuration.loggers[i];
+    for (var i = 0; i < GLOBAL.logFacade.loggers.length; i++) {
+        var logger = GLOBAL.logFacade.loggers[i];
         if (logger.name.test(name)) {
             return logger;
         }
@@ -140,18 +126,16 @@ function findLogger(name) {
 // Create a named logger implementing all the logging functions.
 function getLogger(name) {
 
-    applyConfiguration();
-
     var methods = {};
     var logger = findLogger(name);
 
     if (!logger) {
-        if (localLogger) {
-            localLogger.verbose('Couldn\'t match', name, 'to any logger');
+        if (GLOBAL.logFacade._logger) {
+            GLOBAL.logFacade._logger.verbose('Couldn\'t match', name, 'to any logger');
         }
     } else {
-        if (localLogger) {
-            localLogger.verbose('Matched', name, 'to logger', logger.name, 'with level', logger.level);
+        if (GLOBAL.logFacade._logger) {
+            GLOBAL.logFacade._logger.verbose('Matched', name, 'to logger', logger.name, 'with level', logger.level);
         }
         var above = false;
         for (var i = 0; i < levels.length; i++) {
@@ -175,7 +159,7 @@ function getLogger(name) {
                             }
                             if (b.length) {
                                 if (typeof b[0] === 'string' || typeof b[0] === 'number') {
-                                    data[configuration.msgProperty] = b.length > 1 ? configuration.formatter(b) : b[0];
+                                    data[GLOBAL.logFacade.msgProperty] = b.length > 1 ? GLOBAL.logFacade.formatter(b) : b[0];
                                 }
                             }
                         }

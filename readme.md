@@ -12,8 +12,7 @@ $ npm install log-facade
 ## Usage
 
 ```js
-var logFacade = require('log-facade');
-var logger = logFacade.getLogger('my-app');
+var logger = require('log-facade').getLogger('my-app');
 logger.info('log text');
 logger.info('log', 'concatenated', 'text');
 logger.info({data: 'add a property'}, 'and', 'log text');
@@ -23,6 +22,7 @@ logger.info(function () { return 'log' + ' text '; });
 ## Configuration
 
 ```javascript
+var logFacade = require('log-facade');
 logFacade.configure({
     loggers: [
         {name: /^log-facade$/, level: 'trace', target: impl},
