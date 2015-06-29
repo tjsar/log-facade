@@ -9,8 +9,6 @@ Structured log facade for NodeJs to abstract away the choice of a particular log
 $ npm install log-facade
 ```
 
-In libs package.json, use peerDependencies.
-
 ## Usage
 
 ```js
@@ -29,9 +27,9 @@ logFacade.configure({
     loggers: [
         {name: /^log-facade$/, level: 'trace', target: impl},
         {name: /^console$/, level: 'info', target: impl},
-        {name: /^my_app$/, level: 'verbose', target: impl},
-        {name: /^my_lib_1\.data/, level: 'debug', target: impl},
-        {name: /^my_lib_1/, level: 'error', target: impl},
+        {name: /^my-app$/, level: 'verbose', target: impl},
+        {name: /^my-lib_1\.data/, level: 'debug', target: impl},
+        {name: /^my-lib_1/, level: 'error', target: impl},
         {name: /^.*$/, level: 'error', target: impl},
     ],
     // Catch output from libs that log to console.
@@ -40,7 +38,8 @@ logFacade.configure({
 });
 ```
 
-To create a target, implement all the level functions. For a simple console logger:
+To create a target, implement all the level functions.
+For a simple console logger:
 
 ```javascript
 function get(fun) {

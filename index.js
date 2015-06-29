@@ -182,9 +182,6 @@ function getLogger(name) {
                         logger.target[level](name, level, data);
                     } else {
                         // Level not configured or below threshold, do nothing.
-                        if (localLogger) {
-                            localLogger.debug('Intercepted log to logger', logger.name, 'with level', level);
-                        }
                     }
                 };
             })(levels[i], above);
