@@ -1,0 +1,18 @@
+{
+    "name": "log-facade",
+    "version": "0.0.1",
+    "main": "index.js",
+    "description": "Logging facade for NodeJs",
+    "author": "tjsar <timothee.ruas@gmail.com",
+    "license": "MIT",
+    "keywords": [
+        "log",
+        "logging",
+        "logger",
+        "facade"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/tjsar/log-facade.git"
+    }
+}
